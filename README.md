@@ -3,9 +3,13 @@ This repo has a vagrant file to create an enterprise Vault Cluster with Consul b
 
 There are 3 Vault + Consul clusters created by the Vagrant file.  Each cluster consists of 2 nodes and each node has Vault and Consul servers.
 
-Cluster 1: Vault Primary cluster in DC1
-Cluster 2: Vault Secondary DR cluster in DC2
+```
+Cluster 1: Vault Primary cluster in DC1 
+
+Cluster 2: Vault Secondary DR cluster in DC2 
+
 Cluster 3: Vault Performance Replica cluster in DC3
+```
 
 All servers are set without TLS.
 
@@ -65,7 +69,7 @@ vagrant@v1: $vault status
 
 ```
 
-Vault status would be shown as uninitialised and unsealed.
+Vault status would be shown as uninitialised and sealed.
 
 ## Initialising and Unsealing Vault
 
