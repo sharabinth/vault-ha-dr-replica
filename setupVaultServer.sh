@@ -31,7 +31,7 @@ IP_ADDRESS=$(ip address show $NETWORK_INTERFACE | awk '{print $2}' | egrep -o '(
 HOSTNAME=$(hostname -s)
 
 tee /etc/vault/vault.hcl << EOF
-api_addr = "https://${IP_ADDRESS}:8200"
+api_addr = "http://${IP_ADDRESS}:8200"
 cluster_addr = "https://${IP_ADDRESS}:8201"
 ui = true
 
