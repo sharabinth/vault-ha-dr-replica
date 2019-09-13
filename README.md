@@ -130,3 +130,38 @@ $ vault write sys/replication/performance/secondary/enable token=<long-secondary
 Once the Performance Replication is enabled, the secondary cluster will be sealed.  This can be unsealed using the Primary cluster's unseal key. Note that the data in the secondary cluster will be lost when it is enabled as a performance replication. 
 
 To log into the Performance Replication cluster, make sure to create a user in the auth method of the Primary cluster so it will get replicated so that this user can be used to loginto the secondary cluster.
+
+To loginto the Performance Replication cluster, let's create a user in userpass auth method and attach the admin policy.  This is done as a test to quickly check things at the secondary cluster.
+
+```
+Perform the following in the Primary cluster
+$ vault policy write admin admin.hcl
+$ vault auth enable userpass
+$ vault write auth/userpass/users/test password=test policies=admin
+
+Perform the following in the Secondary cluster
+$ vault login -method=userpass username=test
+Password (will be hidden):
+Success! You are now authenticated. The token information displayed below
+is already stored in the token helper. You do NOT need to run "vault login"
+again. Future Vault requests will automatically use this token.
+
+Key                    Value
+---                    -----
+token                  s.YySpv9BVOHI6417gg5pxrtFh
+token_accessor         mjhrFngsru7HmwYq4E0oKhuQ
+token_duration         768h
+token_renewable        true
+token_policies         ["admin" "default"]
+identity_policies      []
+policies               ["admin" "default"]
+token_meta_username    test
+
+Test whether the loggedin user can list the auth methods
+$ vault secrets list
+Path          Type         Accessor              Description
+----          ----         --------              -----------
+cubbyhole/    cubbyhole    cubbyhole_9c8d5cf5    per-token private secret storage
+identity/     identity     identity_d38cc667     identity store
+sys/          system       system_da3d3f43       system endpoints used for control, policy and debugging
+```
