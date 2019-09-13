@@ -112,7 +112,7 @@ Generally, if a loadbalancer is used then both the cluster_addr and api_addr are
 
 2. Generate the Secondary Activation token
 
-In the Secondary clustere (from any node either active or standby):
+In the Secondary clustere (from any node either active or standby): 
 3. Activate the Secondary Token.  If the Primary API address is different to the one in the secondary token then set the primary_api_addr optional field.
 
 The following shows the CLI commands
