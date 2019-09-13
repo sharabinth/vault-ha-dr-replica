@@ -102,4 +102,30 @@ e.g., Consul UI http://10.100.1.11:8500
 
 e.g., Vault UI http://10.100.2.11:8500 
 
+## Setup Performance Replication
+To do this, the following needs to happen.
 
+In the Primary cluster (from any node either active or standby):
+
+1. Enable the Primary for Replication.  If Primary has a loadbalancer then make sure to set the optional primary_cluster_addr parameter to port 8201.  Make sure that the loadbalancer is configured for Layer 4 to passthrough TCP traffic.  TCP traffic on port 8201 (Primary Cluster Address) should be a passthrough and should not terminate TLS.
+Generally, if a loadbalancer is used then both the cluster_addr and api_addr are set to the loadbalancer address in the Vault config file.  Loadbalancer has to be configured to check the /v1/sys/health endpoint to look for the active node and point the traffic to it.
+
+2. Generate the Secondary Activation token
+
+In the Secondary clustere (from any node either active or standby):
+3. Activate the Secondary Token.  If the Primary API address is different to the one in the secondary token then set the primary_api_addr optional field.
+
+The following shows the CLI commands
+
+```
+# In the Primary Cluster issue the following
+$ vault write -f sys/replication/performance/primary/enable primary_cluster_addr=https://<vault-dns-name>:8201
+$ vault write sys/replication/performance/primary/secondary-token id=<some_id> 
+
+# In the Secondary Cluster issue the following
+$ vault write sys/replication/performance/secondary/enable token=<long-secondary-token> primary_api_addr=https://<primary-vault-dns-name>:443
+```
+
+Once the Performance Replication is enabled, the secondary cluster will be sealed.  This can be unsealed using the Primary cluster's unseal key. Note that the data in the secondary cluster will be lost when it is enabled as a performance replication. 
+
+To log into the Performance Replication cluster, make sure to create a user in the auth method of the Primary cluster so it will get replicated so that this user can be used to loginto the secondary cluster.
