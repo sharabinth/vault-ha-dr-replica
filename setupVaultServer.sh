@@ -62,6 +62,8 @@ User=vault
 Group=vault
 PIDFile=/var/run/vault/vault.pid
 ExecStart=/usr/local/bin/vault server -config=/etc/vault/vault.hcl
+StandardOutput=file:/var/log/vault/vault.log
+StandardError=file:/var/log/vault/vault.log
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 KillSignal=SIGINT
