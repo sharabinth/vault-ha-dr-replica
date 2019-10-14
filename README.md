@@ -103,7 +103,9 @@ e.g., Consul UI http://10.100.1.11:8500
 e.g., Vault UI http://10.100.2.11:8500 
 
 
-## Setup Vault to Test Disaster Recovery and Performance Replication
+# SETUP and TEST DR and PERFORMANCE REPLICATIONS
+
+## 1. Setup Vault to Test Disaster Recovery and Performance Replication
 Prior to setting up DR and PR setups, configure Vault with the following.
 
 1. Setup some static secrets at multiple paths
@@ -129,9 +131,9 @@ vault write auth/userpass/users/test password=test policies=admin
 ```
 
 
-## Setup Disaster Recovery Replication
+## 2. Setup Disaster Recovery Replication
 
-1. Enable DR Replication on the Primary Cluster (10.100.1.11)
+Step 1. Enable DR Replication on the Primary Cluster (10.100.1.11)
 ```
 vault write -f sys/replication/dr/primary/enable
 
@@ -142,7 +144,7 @@ WARNING! The following warnings were returned from Vault:
 
 ```
 
-2. Generate the Secondary Token on the Primary Cluster (10.100.1.11)
+Step 2. Generate the Secondary Token on the Primary Cluster (10.100.1.11)
 ```
 vault write sys/replication/dr/primary/secondary-token id="drsecondary"
 
@@ -155,7 +157,7 @@ wrapping_token_creation_time:    2019-10-04 06:54:00.022804034 +0000 UTC
 wrapping_token_creation_path:    sys/replication/dr/primary/secondary-token
 ```
 
-3. Enable DR Replication on the Secondary Cluster (10.100.2.11)
+Step 3. Enable DR Replication on the Secondary Cluster (10.100.2.11)
 ```
 vault write sys/replication/dr/secondary/enable token="xxx"
 
@@ -169,21 +171,15 @@ WARNING! The following warnings were returned from Vault:
 After this DR Secondary cluster will act as a passive node but will receive the replicated data from DR Primary.  Due to replication, the unseal keys for the DR Secondary will be the same as the DR Primary.  This is required to promote DR Secondary as the DR Primary.
 
 
-## Setup Performance Replication
+## 3. Setup Performance Replication
 To do this, the following needs to happen.
 
-In the Primary cluster (from any node either active or standby):
+In the PERFORMANCE PRIMARY cluster (from any node either active or standby):
 
-1. Enable the Primary for Replication.  If Primary has a loadbalancer then make sure to set the optional primary_cluster_addr parameter to port 8201.  Make sure that the loadbalancer is configured for Layer 4 to passthrough TCP traffic.  TCP traffic on port 8201 (Primary Cluster Address) should be a passthrough and should not terminate TLS.
+Step 1. Enable the Primary for Replication.  
+
+If Primary has a loadbalancer then make sure to set the optional primary_cluster_addr parameter to port 8201.  Make sure that the loadbalancer is configured for Layer 4 to pass through TCP traffic.  TCP traffic on port 8201 (Primary Cluster Address) should be a pass through and should not terminate TLS.
 Generally, if a loadbalancer is used then both the cluster_addr and api_addr are set to the loadbalancer address in the Vault config file.  Loadbalancer has to be configured to check the /v1/sys/health endpoint to look for the active node and point the traffic to it.
-
-2. Generate the Secondary Activation token
-
-In the Secondary cluster (from any node either active or standby): 
-
-3. Activate the Secondary Token.  If the Primary API address is different to the one in the secondary token then set the primary_api_addr optional field.
-
-The following shows the CLI commands
 
 ```
 # 1. In the Primary Cluster issue the following
@@ -196,7 +192,10 @@ WARNING! The following warnings were returned from Vault:
 
   * This cluster is being enabled as a primary for replication. Vault will be
   unavailable for a brief period and will resume service shortly.
+```
 
+Step 2. Generate the Secondary Activation token
+```
 # 2. Generate the Secondary token from the Primary cluster
 vault write sys/replication/performance/primary/secondary-token id="prsecondary" 
 
@@ -207,8 +206,12 @@ wrapping_accessor:               d21zpBz3ta8vBYfyFRSYsoEk
 wrapping_token_ttl:              30m
 wrapping_token_creation_time:    2019-10-04 07:26:31.168313652 +0000 UTC
 wrapping_token_creation_path:    sys/replication/performance/primary/secondary-token
+```
 
+In the PERFORMANCE SECONDARY cluster (from any node either active or standby): 
 
+Step 3. Activate the Secondary Token.  If the Primary API address is different to the one in the secondary token then set the primary_api_addr optional field.
+```
 # 3. In the Secondary Cluster issue the following
 vault write sys/replication/performance/secondary/enable token="<long-secondary-token>" primary_api_addr=https://<primary-vault-dns-name>:443
 
@@ -219,14 +222,10 @@ WARNING! The following warnings were returned from Vault:
   sync complete.
 ```
 
-Once the Performance Replication is enabled, the secondary cluster can be unsealed using the Primary cluster's unseal key. Note that the data in the secondary cluster will be lost when it is enabled as a performance replication. 
+## 4. Log into the Performance Replication Cluster and Verify
 
-To log into the Performance Replication cluster, make sure to create a user in the auth method of the Primary cluster so it will get replicated so that this user can be used to log into the secondary cluster.
-
-To log into the Performance Replication cluster, use the userpass user created in Primary cluster as mentioned in the previous steps prior to setting up the replications.
-
-```
 Perform the following in the Secondary cluster
+```
 $ vault login -method=userpass username=test
 Password (will be hidden):
 
@@ -284,7 +283,7 @@ secret-two/      kv           kv_d9d83f62           n/a
 sys/             system       system_3ec7944f       system endpoints used for control, policy and debugging
 ```
 
-## Monitor Replication Status
+## 5. Monitor Replication Status
 
 Check the status of Replication in all the clusters.
 
@@ -395,7 +394,7 @@ vault read -format=json sys/replication/status
 }
 ```
 
-## Shutdown the Active Node of the Primary
+## 6. Shutdown the Active Node of the Primary
 Primary has 2 nodes and the current active node at 10.100.1.12 is shutdown.  This has updated node 10.100.1.11 as the active node. This should update the known_primary_cluster_addr filed in both DR and PR clusters.
 
 ### DR Secondary
@@ -461,7 +460,7 @@ vault read -format=json sys/replication/status
 }
 ```
 
-## Shutdown the Primary Cluster
+## 7. Shutdown the Primary Cluster
 Shutdown the last node of the primary cluster.  This should stop all replications from the current Primary cluster.
 
 ```
@@ -534,7 +533,7 @@ vault read -format=json sys/replication/status
 }
 ```
 
-## Promote DR Secondary Cluster as the DR Primary
+## 8. Promote DR Secondary Cluster as the DR Primary
 Promote DR Secondary as the new DR Primary.  Then check the replication status.
 
 Step 1. Generate a One Time Password to generate a DR Operation Token
@@ -658,7 +657,7 @@ vault read -format=json sys/replication/status
 
 The known_primary_cluster_addrs is showing the promoted DR Primary cluster at 10.100.2.11.  This is done automatically and Replication from the new PR Primary to PR Secondary is continuing without any further manual configuration.
 
-## Bring up the Old Primary
+## 9. Bring up the Old Primary
 Bring up the Old Primary cluster node and disable DR and Performance Replication so that the secondaries will not connect to the old Primary.
 
 Step 1.  Start Vault
