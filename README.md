@@ -100,7 +100,7 @@ Use one of the server nodes to access the Consul UI on port 8500 and the Vault U
 
 e.g., Consul UI http://10.100.1.11:8500 
 
-e.g., Vault UI http://10.100.2.11:8500 
+e.g., Vault UI http://10.100.2.11:8200 
 
 
 # SETUP and TEST DR and PERFORMANCE REPLICATIONS
