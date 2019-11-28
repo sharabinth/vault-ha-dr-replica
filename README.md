@@ -102,6 +102,72 @@ e.g., Consul UI http://10.100.1.11:8500
 
 e.g., Vault UI http://10.100.2.11:8200 
 
+## Checking Health and Seal Status
+Health of individual Vault nodes can be checked using the Health Check endpoint.  Similarly Seal status can be found using the API.
+
+```
+# On the Active node check the Health Check endpoint
+$ curl -kv http://10.100.1.11:8200/v1/sys/health
+
+*   Trying 10.100.1.11...
+* TCP_NODELAY set
+* Connected to 10.100.1.11 (10.100.1.11) port 8200 (#0)
+> GET /v1/sys/health HTTP/1.1
+> Host: 10.100.1.11:8200
+> User-Agent: curl/7.58.0
+> Accept: */*
+>
+< HTTP/1.1 200 OK
+< Cache-Control: no-store
+< Content-Type: application/json
+< Date: Thu, 28 Nov 2019 00:22:20 GMT
+< Content-Length: 313
+<
+{"initialized":true,"sealed":false,"standby":false,"performance_standby":false,"replication_performance_mode":"disabled","replication_dr_mode":"disabled","server_time_utc":1574900540,"version":"1.2.2+prem","cluster_name":"vault-cluster-96f50b35","cluster_id":"6f65f4fb-c91f-040b-244c-f4de40f2a783","last_wal":16}
+* Connection #0 to host 10.100.1.11 left intact
+
+# On the Standby node check the Health Check endpoint
+$ curl -kv http://10.100.1.12:8200/v1/sys/health
+
+*   Trying 10.100.1.12...
+* TCP_NODELAY set
+* Connected to 10.100.1.12 (10.100.1.12) port 8200 (#0)
+> GET /v1/sys/health HTTP/1.1
+> Host: 10.100.1.12:8200
+> User-Agent: curl/7.58.0
+> Accept: */*
+>
+< HTTP/1.1 473 status code 473
+< Cache-Control: no-store
+< Content-Type: application/json
+< Date: Thu, 28 Nov 2019 00:12:32 GMT
+< Content-Length: 297
+<
+{"initialized":true,"sealed":false,"standby":true,"performance_standby":true,"replication_performance_mode":"disabled","replication_dr_mode":"disabled","server_time_utc":1574899952,"version":"1.2.2+prem","cluster_name":"vault-cluster-96f50b35","cluster_id":"6f65f4fb-c91f-040b-244c-f4de40f2a783"}
+* Connection #0 to host 10.100.1.12 left intact
+
+# Check the Seal Status using one of the nodes in the cluster
+$ curl -kv http://10.100.1.11:8200/v1/sys/seal-status
+
+*   Trying 10.100.1.11...
+* TCP_NODELAY set
+* Connected to 10.100.1.11 (10.100.1.11) port 8200 (#0)
+> GET /v1/sys/seal-status HTTP/1.1
+> Host: 10.100.1.11:8200
+> User-Agent: curl/7.58.0
+> Accept: */*
+>
+< HTTP/1.1 200 OK
+< Cache-Control: no-store
+< Content-Type: application/json
+< Date: Thu, 28 Nov 2019 00:26:21 GMT
+< Content-Length: 243
+<
+{"type":"shamir","initialized":true,"sealed":false,"t":1,"n":1,"progress":0,"nonce":"","version":"1.2.2+prem","migration":false,"cluster_name":"vault-cluster-96f50b35","cluster_id":"6f65f4fb-c91f-040b-244c-f4de40f2a783","recovery_seal":false}
+* Connection #0 to host 10.100.1.11 left intact
+
+```
+
 
 # SETUP and TEST DR and PERFORMANCE REPLICATIONS
 
