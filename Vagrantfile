@@ -18,24 +18,19 @@ VAULT_REPLICA_SERVER_IPS = ENV['VAULT_REPLICA_SERVER_IPS'] || '"10.100.3.11", "1
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
-  config.vm.box_version = "20190411.0.0"
-
-  # Consul UI for Primary would be available at port 8500 of any of the servers e.g., http://10.100.1.11:8500 
-  # UI will only work if a leader is elected successfully
-  # Vault UI for Primary will be available at port 8200 of any of the primary servers e.g., http://10.100.1.11:8200
+  #config.vm.box_version = "20190411.0.0"
 
   # set up the 2 node Vault Primary HA servers
   (1..2).each do |i|
     config.vm.define "vault#{i}" do |v1|
       v1.vm.hostname = "v#{i}"
       
-      #v1.vm.network "private_network", ip: "10.100.1.1#{i}"
       v1.vm.network "private_network", ip: VAULT_HA_SERVER_IP_PREFIX+"#{i}"
       v1.vm.provision "shell", 
-              path: "setupConsulServer.sh",
+              path: "scripts/setupConsulServer.sh",
               env: {'VAULT_HA_SERVER_IPS' => VAULT_HA_SERVER_IPS, 'VAULT_DC' => 'dc1'}
 
-      v1.vm.provision "shell", path: "setupVaultServer.sh"
+      v1.vm.provision "shell", path: "scripts/setupVaultServer.sh"
     end
   end
 
@@ -46,10 +41,10 @@ Vagrant.configure("2") do |config|
       
       v1.vm.network "private_network", ip: VAULT_DR_SERVER_IP_PREFIX+"#{i}"
       v1.vm.provision "shell", 
-              path: "setupConsulServer.sh",
+              path: "scripts/setupConsulServer.sh",
               env: {'VAULT_HA_SERVER_IPS' => VAULT_DR_SERVER_IPS, 'VAULT_DC' => 'dc2'}
 
-      v1.vm.provision "shell", path: "setupVaultServer.sh"
+      v1.vm.provision "shell", path: "scripts/setupVaultServer.sh"
     end
   end
 
@@ -60,12 +55,11 @@ Vagrant.configure("2") do |config|
       
       v1.vm.network "private_network", ip: VAULT_REPLICA_SERVER_IP_PREFIX+"#{i}"
       v1.vm.provision "shell", 
-              path: "setupConsulServer.sh",
+              path: "scripts/setupConsulServer.sh",
               env: {'VAULT_HA_SERVER_IPS' => VAULT_REPLICA_SERVER_IPS, 'VAULT_DC' => 'dc3'}
 
-      v1.vm.provision "shell", path: "setupVaultServer.sh"
+      v1.vm.provision "shell", path: "scripts/setupVaultServer.sh"
     end
   end
-
 
 end
