@@ -189,7 +189,7 @@ vault kv put secret-two/two ver=5.2 app=middleware
 vault kv put secret-three/three ver=5.3 app=data
 vault kv put secret-four/four ver=5.4 app=k8s
 
-vault policy write admin /vagrant/admin.hcl
+vault policy write admin /vagrant/policies/admin.hcl
 
 vault auth enable userpass
 vault write auth/userpass/users/test password=test policies=admin
